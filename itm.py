@@ -328,7 +328,7 @@ class ITMDataset(torch.utils.data.Dataset):
         deepsmiles = []
         attention_mask = []
         labels = []
-        for i in range(batch_size):
+        for i in range(training_config):
             sample = get_itm_sample()
             pixel_values.append(sample["img"][0])
             deepsmiles.append(sample["text"][0])
