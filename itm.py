@@ -1,4 +1,5 @@
 # %%
+ITM = False
 bp = breakpoint
 import random
 from datasets import load_dataset
@@ -361,23 +362,24 @@ for epoch in range(training_config["num_epochs"]):
         correct_output = [x.replace(" ", "").lower() for x in correct_output]
         
         # print("Training ITM")
-        optimizer.zero_grad()
-        itm_batch = get_itm_batch(32)
-        outputs = model(
-            input_ids=itm_batch["input_ids"].to(device),
-            pixel_values=itm_batch["pixel_values"].to(device),
-            attention_mask=itm_batch["attention_mask"].to(device),
-            labels=itm_batch["labels"].to(device),
-            mode="itm",
-        )
-        loss = outputs["loss"]
-        loss.backward()
-        optimizer.step()
-        itm_logits = outputs["logits"]
-        itm_pred = torch.sigmoid(itm_logits).cpu().detach().numpy() > 0.5
-        itm_gt = itm_batch["labels"].cpu().numpy()
-        itm_acc = (itm_pred == itm_gt).sum() / len(itm_gt)
-        wandb.log({"itm_acc": itm_acc, "itm_loss": loss.item(), "lr": scheduler.get_last_lr()[0]})
+        if ITM:
+            optimizer.zero_grad()
+            itm_batch = get_itm_batch(32)
+            outputs = model(
+                input_ids=itm_batch["input_ids"].to(device),
+                pixel_values=itm_batch["pixel_values"].to(device),
+                attention_mask=itm_batch["attention_mask"].to(device),
+                labels=itm_batch["labels"].to(device),
+                mode="itm",
+            )
+            loss = outputs["loss"]
+            loss.backward()
+            optimizer.step()
+            itm_logits = outputs["logits"]
+            itm_pred = torch.sigmoid(itm_logits).cpu().detach().numpy() > 0.5
+            itm_gt = itm_batch["labels"].cpu().numpy()
+            itm_acc = (itm_pred == itm_gt).sum() / len(itm_gt)
+            wandb.log({"itm_acc": itm_acc, "itm_loss": loss.item(), "lr": scheduler.get_last_lr()[0]})
         scheduler.step()
         if step % 100 == 0:
             print(f"Step {step}, Loss: {loss.item()}")
