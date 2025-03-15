@@ -112,6 +112,7 @@ class Router(PreTrainedModel):
 
         elif mode == "itm":
             itm_token_id = processor.tokenizer.convert_tokens_to_ids("[ITM]")
+            bp()
             itm_indices = (input_ids == itm_token_id).int().nonzero(as_tuple=True)[1]
             non_zero_itm = itm_indices[itm_indices!=0]
             end_index = non_zero_itm
