@@ -321,7 +321,7 @@ class ITMDataset(torch.utils.data.Dataset):
         pass
 
     def __len__(self):
-        return 12800000000000
+        return 128
 
     def __getitem__(self, idx):
         pixel_values = []
@@ -348,9 +348,12 @@ class ITMDataset(torch.utils.data.Dataset):
 
 itm_dataloader = iter(torch.utils.data.DataLoader(
     ITMDataset(),
-    batch_size=training_config["batch_size"],
+    batch_size=1,
     shuffle=True,
     num_workers=os.cpu_count(),
+    collate_fn=lambda x: x[0],  # get the first element of the batch
+    prefetch_factor=1,
+    persistent_workers=True,
 ))
 
 
