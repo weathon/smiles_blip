@@ -214,28 +214,7 @@ def get_itm_sample():
 
 # print(get_itm_sample())
 
-def get_itm_batch(batch_size):
-    pixel_values = []
-    deepsmiles = []
-    attention_mask = []
-    labels = []
-    for i in range(batch_size):
-        sample = get_itm_sample()
-        pixel_values.append(sample["img"][0])
-        deepsmiles.append(sample["text"][0])
-        labels.append(sample["label"])
 
-    pixel_values = torch.stack(pixel_values)
-    processed = processor.tokenizer(deepsmiles, padding=True, return_tensors="pt", return_attention_mask=True)
-    input_ids = processed["input_ids"]
-    attention_mask = processed["attention_mask"]
-    labels = torch.stack(labels)
-    return {
-        "pixel_values": pixel_values,
-        "input_ids": input_ids,
-        "attention_mask": attention_mask,
-        "labels": labels,
-    }
 
 # print(get_itm_batch(2))
 # %%
@@ -337,6 +316,44 @@ def val():
     model.train()
 
 
+class ITMDataset(torch.utils.data.Dataset):
+    def __init__(self):
+        pass
+
+    def __len__(self):
+        return 12800000000000
+
+    def __getitem__(self, idx):
+        pixel_values = []
+        deepsmiles = []
+        attention_mask = []
+        labels = []
+        for i in range(batch_size):
+            sample = get_itm_sample()
+            pixel_values.append(sample["img"][0])
+            deepsmiles.append(sample["text"][0])
+            labels.append(sample["label"])
+
+        pixel_values = torch.stack(pixel_values)
+        processed = processor.tokenizer(deepsmiles, padding=True, return_tensors="pt", return_attention_mask=True)
+        input_ids = processed["input_ids"]
+        attention_mask = processed["attention_mask"]
+        labels = torch.stack(labels)
+        return {
+            "pixel_values": pixel_values,
+            "input_ids": input_ids,
+            "attention_mask": attention_mask,
+            "labels": labels,
+        }
+
+itm_dataloader = iter(torch.utils.data.DataLoader(
+    ITMDataset(),
+    batch_size=training_config["batch_size"],
+    shuffle=True,
+    num_workers=os.cpu_count(),
+))
+
+
 # %%
 for epoch in range(training_config["num_epochs"]):
     print(f"Epoch {epoch + 1}/{training_config['num_epochs']}")
@@ -364,7 +381,8 @@ for epoch in range(training_config["num_epochs"]):
         # print("Training ITM")
         if ITM:
             optimizer.zero_grad()
-            itm_batch = get_itm_batch(32)
+            itm_batch = next(itm_dataloader)
+            bp()
             outputs = model(
                 input_ids=itm_batch["input_ids"].to(device),
                 pixel_values=itm_batch["pixel_values"].to(device),
