@@ -373,8 +373,8 @@ for epoch in range(training_config["num_epochs"]):
             mode="lm",
         )
         loss = outputs["loss"]
-        loss.backward()
-        optimizer.step()
+        # loss.backward()
+        # optimizer.step()
         wandb.log({"lm_loss": loss.item()})
         decoded_output = processor.batch_decode(outputs["ids"], skip_special_tokens=True)
         correct_output = batch["deepsmiles"]
@@ -384,7 +384,6 @@ for epoch in range(training_config["num_epochs"]):
         
         # print("Training ITM")
         if ITM:
-            optimizer.zero_grad()
             itm_batch = next(itm_dataloader_iter)
             outputs = model(
                 input_ids=itm_batch["input_ids"].to(device),
@@ -393,7 +392,7 @@ for epoch in range(training_config["num_epochs"]):
                 labels=itm_batch["labels"].to(device),
                 mode="itm",
             )
-            loss = outputs["loss"] * 0.5
+            loss += outputs["loss"] * 0.5
             loss.backward()
             optimizer.step()
             itm_logits = outputs["logits"]
@@ -401,6 +400,10 @@ for epoch in range(training_config["num_epochs"]):
             itm_gt = itm_batch["labels"].cpu().numpy()
             itm_acc = (itm_pred == itm_gt).sum() / len(itm_gt)
             wandb.log({"itm_acc": itm_acc, "itm_loss": loss.item(), "lr": scheduler.get_last_lr()[0]})
+        else:
+            loss.backward()
+            optimizer.step()
+
         scheduler.step()
         if step % 100 == 0:
             print(f"Step {step}, Loss: {loss.item()}")
