@@ -203,7 +203,7 @@ def get_itm_sample():
         img = train_ds[index]["pixel_values"]
         pred = train_ds[index]["deepsmiles"]
     
-    pred[0] += "ITM"
+    pred[0] += "[ITM]"
     print("SMILES: ", pred[0])
     breakpoint()
 
