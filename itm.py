@@ -113,7 +113,7 @@ class Router(PreTrainedModel):
             itm_indices = (input_ids == itm_token_id).int().nonzero(as_tuple=True)[1]
             non_zero_itm = itm_indices[itm_indices!=0]
             end_index = non_zero_itm + 1
-            print("end_index: ", end_index)
+            # print("end_index: ", end_index)
             # needs to +1, because it needs to be what comes after the cls_token_id token, 
             # not at the cls_token_id token, but this means we need to add another eos at the input
             # it is cls, so the model knows it is a pred, not the same as end
@@ -187,7 +187,6 @@ def get_itm_sample():
         index = torch.randint(0, len(train_ds), (1,))
         img = train_ds[index]["pixel_values"]
         pred = train_ds[index]["deepsmiles"]
-        print(pred)
         # replace randon k characters with random characters
         k = random.randint(1, 5)
         # print("Original SMILES: ", pred[0])
@@ -204,7 +203,6 @@ def get_itm_sample():
         pred = train_ds[index]["deepsmiles"]
     
     pred[0] += "[ITM]"
-    print("SMILES: ", pred[0])
 
     return {
         "img": img,
