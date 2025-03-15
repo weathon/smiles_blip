@@ -37,6 +37,7 @@ base_model = BlipForConditionalGeneration.from_pretrained(
 # bp()
 # base_model.resize_token_embeddings(len(processor.tokenizer)) this will cause error, but there are extract empty tokens already 
 
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # %%
 def encode_smiles(example):
@@ -132,6 +133,7 @@ class Router(PreTrainedModel):
 
             loss = outputs.loss
             last_hidden_state = outputs.hidden_states[-1]
+            bp()
             # print(last_hidden_state.shape)
             end_index = end_index.unsqueeze(-1).unsqueeze(-1).expand(-1, 1, 768)
             # print(end_index.shape)
