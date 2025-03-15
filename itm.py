@@ -321,7 +321,7 @@ class ITMDataset(torch.utils.data.Dataset):
         pass
 
     def __len__(self):
-        return 128
+        return len(train_ds)// training_config["batch_size"] + 10
 
     def __getitem__(self, idx):
         pixel_values = []
@@ -346,7 +346,7 @@ class ITMDataset(torch.utils.data.Dataset):
             "labels": labels,
         }
 
-itm_dataloader = iter(torch.utils.data.DataLoader(
+itm_dataloader = torch.utils.data.DataLoader(
     ITMDataset(),
     batch_size=1,
     shuffle=True,
@@ -354,13 +354,14 @@ itm_dataloader = iter(torch.utils.data.DataLoader(
     collate_fn=lambda x: x[0],  # get the first element of the batch
     prefetch_factor=1,
     persistent_workers=True,
-))
+)
 
 
 # %%
 for epoch in range(training_config["num_epochs"]):
     print(f"Epoch {epoch + 1}/{training_config['num_epochs']}")
     model.train()
+    itm_dataloader_iter = iter(itm_dataloader)
     for step, batch in enumerate(tqdm.tqdm(train_dataloader)):
         # print("Training LM")
         optimizer.zero_grad()
@@ -384,7 +385,7 @@ for epoch in range(training_config["num_epochs"]):
         # print("Training ITM")
         if ITM:
             optimizer.zero_grad()
-            itm_batch = next(itm_dataloader)
+            itm_batch = next(itm_dataloader_iter)
             outputs = model(
                 input_ids=itm_batch["input_ids"].to(device),
                 pixel_values=itm_batch["pixel_values"].to(device),
