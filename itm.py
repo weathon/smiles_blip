@@ -109,10 +109,10 @@ class Router(PreTrainedModel):
             return {"loss": loss, "logits": logits, "ids": ids}
 
         elif mode == "itm":
-            cls_token_id = processor.tokenizer.convert_tokens_to_ids("[ITM]")
-            cls_indices = (input_ids == cls_token_id).int().nonzero(as_tuple=True)[1]
-            non_zero_cls = cls_indices[cls_indices!=0]
-            end_index = non_zero_cls + 1
+            itm_token_id = processor.tokenizer.convert_tokens_to_ids("[ITM]")
+            itm_indices = (input_ids == itm_token_id).int().nonzero(as_tuple=True)[1]
+            non_zero_itm = itm_indices[itm_indices!=0]
+            end_index = non_zero_itm + 1
             print("end_index: ", end_index)
             # needs to +1, because it needs to be what comes after the cls_token_id token, 
             # not at the cls_token_id token, but this means we need to add another eos at the input
@@ -204,8 +204,8 @@ def get_itm_sample():
         pred = train_ds[index]["deepsmiles"]
     
     pred[0] += "ITM"
-    # print("SMILES: ", pred[0])
-    # breakpoint()
+    print("SMILES: ", pred[0])
+    breakpoint()
 
     return {
         "img": img,
