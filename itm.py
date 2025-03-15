@@ -34,7 +34,7 @@ processor.tokenizer.add_special_tokens({"additional_special_tokens": ["[ITM]"]})
 base_model = BlipForConditionalGeneration.from_pretrained(
     checkpoint,
 )
-print(len(processor.tokenizer))
+bp()
 base_model.resize_token_embeddings(len(processor.tokenizer))
 
 # %%
