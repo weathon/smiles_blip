@@ -385,7 +385,6 @@ for epoch in range(training_config["num_epochs"]):
         if ITM:
             optimizer.zero_grad()
             itm_batch = next(itm_dataloader)
-            bp()
             outputs = model(
                 input_ids=itm_batch["input_ids"].to(device),
                 pixel_values=itm_batch["pixel_values"].to(device),
