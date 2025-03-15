@@ -205,7 +205,6 @@ def get_itm_sample():
     
     pred[0] += "[ITM]"
     print("SMILES: ", pred[0])
-    breakpoint()
 
     return {
         "img": img,
