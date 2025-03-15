@@ -47,6 +47,8 @@ ds = load_dataset("weathon/3d2smiles_synthetic")
 
 train_ds = ds["train"].map(encode_smiles)
 test_ds = ds["val"].map(encode_smiles)
+# filter only 1/100 of the dataset
+test_ds = test_ds.filter(lambda x: x["cid"] % 100 == 0)
 all_possible_chars = list(set("".join(train_ds["deepsmiles"])))
 
 # %%
