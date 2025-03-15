@@ -109,8 +109,8 @@ class Router(PreTrainedModel):
             return {"loss": loss, "logits": logits, "ids": ids}
 
         elif mode == "itm":
-            cls_token_id = processor.token_to_chars["[ITM]"]
             bp()
+            cls_token_id = processor.convert_tokens_to_ids["[ITM]"]
             cls_indices = (input_ids == cls_token_id).int().nonzero(as_tuple=True)[1]
             non_zero_cls = cls_indices[cls_indices!=0]
             end_index = non_zero_cls + 1
