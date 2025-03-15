@@ -114,11 +114,7 @@ class Router(PreTrainedModel):
             itm_token_id = processor.tokenizer.convert_tokens_to_ids("[ITM]")
             itm_indices = (input_ids == itm_token_id).int().nonzero(as_tuple=True)[1]
             non_zero_itm = itm_indices[itm_indices!=0]
-            end_index = non_zero_itm + 1
-            # print("end_index: ", end_index)
-            # needs to +1, because it needs to be what comes after the cls_token_id token, 
-            # not at the cls_token_id token, but this means we need to add another eos at the input
-            # it is cls, so the model knows it is a pred, not the same as end
+            end_index = non_zero_itm
             vision_outputs = self.blip.vision_model(
                 pixel_values=pixel_values,
             )
@@ -239,12 +235,11 @@ def get_itm_batch(batch_size):
 
 # print(get_itm_batch(2))
 # %%
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
 training_config = {
     "lr": 5e-5,
     "batch_size": 32,
     "num_epochs": 30,
-    "weight_decay": 0.02,
+    "weight_decay": 0.001,
     "min_factor": 0.1,
 }
 import wandb
