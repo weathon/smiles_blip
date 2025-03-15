@@ -314,7 +314,6 @@ def val():
                     itm_gt.append(0)
                 total += 1
             lm_losses.append(loss.item())
-            print(itm_gt)
             # use model generated smiles and math-or-not to get itm loss and acc
             itm_text = processor.tokenizer.batch_encode_plus(decoded_output, padding=True, return_tensors="pt")
             itm_outputs = model(
