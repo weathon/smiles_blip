@@ -393,7 +393,7 @@ for epoch in range(training_config["num_epochs"]):
                 labels=itm_batch["labels"].to(device),
                 mode="itm",
             )
-            loss = outputs["loss"]
+            loss = outputs["loss"] * 0.5
             loss.backward()
             optimizer.step()
             itm_logits = outputs["logits"]
