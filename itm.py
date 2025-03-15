@@ -278,7 +278,7 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
 )
 
 
-
+import tqdm
 
 def val():
     correct = 0
@@ -287,7 +287,7 @@ def val():
     itm_losses = []
     itm_acc = []
     print("Validation")
-    for step, batch in enumerate(test_dataloader):
+    for step, batch in enumerate(tqdm.tqdm(test_dataloader)):
         model.eval()
 
         with torch.no_grad():
@@ -341,7 +341,7 @@ def val():
 for epoch in range(training_config["num_epochs"]):
     print(f"Epoch {epoch + 1}/{training_config['num_epochs']}")
     model.train()
-    for step, batch in enumerate(train_dataloader):
+    for step, batch in enumerate(tqdm.tqdm(train_dataloader)):
         # print("Training LM")
         optimizer.zero_grad()
         outputs = model(
