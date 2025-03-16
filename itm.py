@@ -1,4 +1,7 @@
 # %%
+# I might need to use ITC not ITM, because ITM they can just memorize the correct text
+
+
 ITM = True  
 bp = breakpoint
 import random
@@ -26,15 +29,13 @@ import os
 
 # %%
 from transformers import BlipForConditionalGeneration
-# checkpoint = "Salesforce/blip-image-captioning-base" 
-checkpoint = "weathon/smiles_llava"
-config = AutoConfig.from_pretrained(checkpoint)
+checkpoint = "Salesforce/blip-image-captioning-base" 
+# checkpoint = "weathon/smiles_llava-itm"
+config = AutoConfig.from_pretrained("weathon/smiles_llava-itm")
 config.vision_config.dropout = 0.2
 processor = AutoProcessor.from_pretrained("Salesforce/blip-image-captioning-base", config=config)
 processor.tokenizer.add_special_tokens({"additional_special_tokens": ["[ITM]"]})
-base_model = BlipForConditionalGeneration.from_pretrained(
-    checkpoint,
-)
+base_model = BlipForConditionalGeneration(config)
 # bp()
 # base_model.resize_token_embeddings(len(processor.tokenizer)) this will cause error, but there are extract empty tokens already 
 
@@ -44,13 +45,13 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 def encode_smiles(example):
     example["deepsmiles"] = converter.encode(example["caption"])
     return example
-# ds = load_dataset("weathon/3d2smiles_real")
-ds = load_dataset("weathon/3d2smiles_synthetic")
+ds = load_dataset("weathon/3d2smiles_real")
+# ds = load_dataset("weathon/3d2smiles_synthetic")
 
 train_ds = ds["train"].map(encode_smiles)
 test_ds = ds["val"].map(encode_smiles)
 # filter only 1/100 of the dataset
-test_ds = test_ds.filter(lambda x: x["cid"] % 100 == 0)
+# test_ds = test_ds.filter(lambda x: x["cid"] % 100 == 0)
 all_possible_chars = list(set("".join(train_ds["deepsmiles"])))
 
 # %%
@@ -91,6 +92,7 @@ test_ds.set_transform(transforms)
 
 # %%
 from transformers import PreTrainedModel
+# removed dropout, config from repo, no nan 
 class Router(PreTrainedModel):
     def __init__(self, config):
         super().__init__(config) 
@@ -155,7 +157,7 @@ class Router(PreTrainedModel):
            	
 
 
-model = Router(config)
+model = Router.from_pretrained("weathon/smiles_llava-itm", config=config) # need to be load here
 inputs = train_ds[0:1]
 # print(model(inputs["input_ids"], inputs["pixel_values"], inputs["attention_mask"], labels=inputs["labels"], mode="lm"))
 
@@ -219,10 +221,10 @@ def get_itm_sample():
 # print(get_itm_batch(2))
 # %%
 training_config = {
-    "lr": 1e-5,
-    "batch_size": 32,
-    "num_epochs": 5,
-    "weight_decay": 0.001,
+    "lr": 5e-5,
+    "batch_size": 16,
+    "num_epochs": 30,
+    "weight_decay": 0.5,
     "min_factor": 0.1,
 }
 import wandb
@@ -392,7 +394,7 @@ for epoch in range(training_config["num_epochs"]):
                 labels=itm_batch["labels"].to(device),
                 mode="itm",
             )
-            loss += outputs["loss"] * 0.1
+            loss += outputs["loss"] * 0.2
             loss.backward()
             optimizer.step()
             itm_logits = outputs["logits"]
@@ -408,13 +410,13 @@ for epoch in range(training_config["num_epochs"]):
         if step % 100 == 0:
             print(f"Step {step}, Loss: {loss.item()}")
             val()
-        if step % 500 == 499:
-            # push model to huggingface
-            model.push_to_hub(
-                f"weathon/smiles_llava-itm",
-                commit_message=f"epoch-{epoch}-step-{step}",
-                blocking=False,
-            )
+        # if step % 500 == 499:
+        #     # push model to huggingface
+        #     model.push_to_hub(
+        #         f"weathon/smiles_llava-itm-ft",
+        #         commit_message=f"epoch-{epoch}-step-{step}",
+        #         blocking=False,
+        #     )
         
 
 
