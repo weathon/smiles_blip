@@ -26,8 +26,8 @@ import os
 
 # %%
 from transformers import BlipForConditionalGeneration
-checkpoint = "Salesforce/blip-image-captioning-base" 
-# checkpoint = "weathon/smiles_llava"
+# checkpoint = "Salesforce/blip-image-captioning-base" 
+checkpoint = "weathon/smiles_llava"
 config = AutoConfig.from_pretrained(checkpoint)
 config.vision_config.dropout = 0.2
 processor = AutoProcessor.from_pretrained("Salesforce/blip-image-captioning-base", config=config)
@@ -219,9 +219,9 @@ def get_itm_sample():
 # print(get_itm_batch(2))
 # %%
 training_config = {
-    "lr": 5e-5,
+    "lr": 1e-5,
     "batch_size": 32,
-    "num_epochs": 30,
+    "num_epochs": 5,
     "weight_decay": 0.001,
     "min_factor": 0.1,
 }
@@ -285,7 +285,7 @@ def val():
             correct_output = [x.replace(" ", "").lower() for x in correct_output]
             itm_gt = []
             for i in range(len(decoded_output)):
-                if decoded_output[i] == correct_output[i]:
+                if decoded_output[i].replace("[ITM]","") == correct_output[i]:
                     correct += 1
                     itm_gt.append(1)
                 else:
@@ -392,7 +392,7 @@ for epoch in range(training_config["num_epochs"]):
                 labels=itm_batch["labels"].to(device),
                 mode="itm",
             )
-            loss += outputs["loss"] * 0.5
+            loss += outputs["loss"] * 0.1
             loss.backward()
             optimizer.step()
             itm_logits = outputs["logits"]
@@ -408,7 +408,13 @@ for epoch in range(training_config["num_epochs"]):
         if step % 100 == 0:
             print(f"Step {step}, Loss: {loss.item()}")
             val()
-
+        if step % 500 == 499:
+            # push model to huggingface
+            model.push_to_hub(
+                f"weathon/smiles_llava-itm",
+                commit_message=f"epoch-{epoch}-step-{step}",
+                blocking=False,
+            )
         
 
 
